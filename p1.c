@@ -3,26 +3,28 @@
 #include <sys/wait.h>  
 #include <unistd.h>  
 #include <sys/reg.h>
+
 #include <stdio.h>
 #include <string.h>
 
 const int long_size = sizeof(long);
+union u {  
+            long val;  
+            char chars[long_size];  
+};  
 
 void getdata(pid_t child, long addr,  char *str, int len)  
 {     
     char *laddr;  
     int i, j;  
-    union u {  
-            long val;  
-            char chars[long_size];  
-    }data;  
+    union u data;  
   
     i = 0;  
     j = len / long_size;  
     laddr = str;  
     while(i < j) {  
         data.val = ptrace(PTRACE_PEEKDATA,   
-                          child, addr + i * 8,   
+                          child, addr + i * long_size,   
                           NULL);  
         memcpy(laddr, data.chars, long_size);  
         ++i;  
@@ -31,7 +33,7 @@ void getdata(pid_t child, long addr,  char *str, int len)
     j = len % long_size;  
     if(j != 0) {  
         data.val = ptrace(PTRACE_PEEKDATA,   
-                          child, addr + i * 8,   
+                          child, addr + i * long_size,   
                           NULL);  
         memcpy(laddr, data.chars, j);  
     }  
@@ -41,11 +43,8 @@ void getdata(pid_t child, long addr,  char *str, int len)
 void putdata(pid_t child, long addr,  char *str, int len)  
 {     
     char *laddr;  
-    int i, j;  
-    union u {  
-            long val;  
-            char chars[long_size];  
-    }data;  
+    int i, j; 
+    union u data;
   
     i = 0;  
     j = len / long_size;  
@@ -53,7 +52,7 @@ void putdata(pid_t child, long addr,  char *str, int len)
     while(i < j) {  
         memcpy(data.chars, laddr, long_size);  
         ptrace(PTRACE_POKEDATA, child,   
-               addr + i * 4, data.val);  
+               addr + i * long_size, data.val);  
         ++i;  
         laddr += long_size;  
     }  
@@ -61,13 +60,13 @@ void putdata(pid_t child, long addr,  char *str, int len)
     if(j != 0) {  
         memcpy(data.chars, laddr, j);  
         ptrace(PTRACE_POKEDATA, child,   
-               addr + i * 4, data.val);  
+               addr + i * long_size, data.val);  
     }  
 }  
 
 int main()  
 {  
-   pid_t child;  
+    pid_t child;  
     long orig_eax;  
     child = fork();  
     if(child == 0) {  
@@ -76,8 +75,8 @@ int main()
     }  
     else {  
         wait(NULL);
-        orig_eax = ptrace(PTRACE_PEEKUSER,   
-                          child, 8 * ORIG_RAX,   
+        orig_eax = ptrace(PTRACE_PEEKTEXT,   
+                          child, (void *)0x400579,   
                           NULL);  
         printf("The child made a "  
                "system call %ld \n", orig_eax);  
