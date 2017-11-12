@@ -12,9 +12,17 @@ int main()
     child = fork();  
     if(child == 0) {  
         ptrace(PTRACE_TRACEME, 0, NULL, NULL);  
-        execl("/bin/ls", "ls", NULL);  
+        execl("./bp","bp",NULL);  
     }  
     else {  
+        wait(NULL);
+        orig_eax = ptrace(PTRACE_PEEKUSER,   
+                          child, 8 * ORIG_RAX,   
+                          NULL);  
+        printf("The child made a "  
+               "system call %ld \n", orig_eax);  
+        ptrace(PTRACE_SYSCALL, child, NULL, NULL);  
+
         wait(NULL);
         orig_eax = ptrace(PTRACE_PEEKUSER,   
                           child, 8 * ORIG_RAX,   
