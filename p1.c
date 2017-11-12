@@ -8,16 +8,16 @@
 #include <string.h>
 
 const int long_size = sizeof(long);
-union u {  
-            long val;  
-            char chars[long_size];  
-};  
 
 void getdata(pid_t child, long addr,  char *str, int len)  
 {     
     char *laddr;  
     int i, j;  
-    union u data;  
+    //union u data; 
+    union u {  
+            unsigned long val;  
+            char c[long_size];  
+    }data;   
   
     i = 0;  
     j = len / long_size;  
@@ -26,7 +26,7 @@ void getdata(pid_t child, long addr,  char *str, int len)
         data.val = ptrace(PTRACE_PEEKDATA,   
                           child, addr + i * long_size,   
                           NULL);  
-        memcpy(laddr, data.chars, long_size);  
+        memcpy(laddr, data.c, long_size);  
         ++i;  
         laddr += long_size;  
     }  
@@ -35,7 +35,7 @@ void getdata(pid_t child, long addr,  char *str, int len)
         data.val = ptrace(PTRACE_PEEKDATA,   
                           child, addr + i * long_size,   
                           NULL);  
-        memcpy(laddr, data.chars, j);  
+        memcpy(laddr, data.c, j);  
     }  
     //str[len] = '\0';  
 }  
@@ -44,13 +44,17 @@ void putdata(pid_t child, long addr,  char *str, int len)
 {     
     char *laddr;  
     int i, j; 
-    union u data;
+    //union u data;
+    union u {  
+            unsigned long val;  
+            char c[long_size];  
+    }data;  
   
     i = 0;  
     j = len / long_size;  
     laddr = str;  
     while(i < j) {  
-        memcpy(data.chars, laddr, long_size);  
+        memcpy(data.c, laddr, long_size);  
         ptrace(PTRACE_POKEDATA, child,   
                addr + i * long_size, data.val);  
         ++i;  
@@ -58,7 +62,7 @@ void putdata(pid_t child, long addr,  char *str, int len)
     }  
     j = len % long_size;  
     if(j != 0) {  
-        memcpy(data.chars, laddr, j);  
+        memcpy(data.c, laddr, j);  
         ptrace(PTRACE_POKEDATA, child,   
                addr + i * long_size, data.val);  
     }  
@@ -67,7 +71,11 @@ void putdata(pid_t child, long addr,  char *str, int len)
 int main()  
 {  
     pid_t child;  
-    long orig_eax;  
+    //union u data;
+    union u {  
+            unsigned long val;  
+            char c[long_size];  
+    }data;
     child = fork();  
     if(child == 0) {  
         ptrace(PTRACE_TRACEME, 0, NULL, NULL);  
@@ -75,18 +83,27 @@ int main()
     }  
     else {  
         wait(NULL);
-        orig_eax = ptrace(PTRACE_PEEKTEXT,   
+        data.val = ptrace(PTRACE_PEEKUSER,   
+                          child, 8 * RIP,   
+                          NULL);  
+        printf("The RIP is %lx\n", data.val); 
+        getchar(); 
+
+        data.val = ptrace(PTRACE_PEEKTEXT,   
                           child, (void *)0x400579,   
                           NULL);  
-        printf("The child made a "  
-               "system call %ld \n", orig_eax);  
-        ptrace(PTRACE_SYSCALL, child, NULL, NULL);  
+        printf("before The instr is %lx\n", data.val);  
+        data.c[0] = 0xcc;
+        ptrace(PTRACE_POKETEXT, 
+                child, (void *)0x400579, data.val);
+        printf("after The instr is %lx\n", data.val);
+        ptrace(PTRACE_CONT, child, NULL, NULL);  
+        getchar();
         wait(NULL);
-        orig_eax = ptrace(PTRACE_PEEKUSER,   
-                          child, 8 * ORIG_RAX,   
+        data.val = ptrace(PTRACE_PEEKUSER,   
+                          child, 8 * RIP,   
                           NULL);  
-        printf("The child made a "  
-               "system call %ld \n", orig_eax);  
+        printf("The RIP is %lx\n", data.val);  
         ptrace(PTRACE_CONT, child, NULL, NULL);  
     }  
     return 0;  
