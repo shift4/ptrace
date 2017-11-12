@@ -3,7 +3,7 @@
 int print(int s)
 {
 	if(s > 10){
-		printf("%d greater than 10.\n",s);
+		printf("%d is greater than 10.\n",s);
 	}
 	return 0;
 }
