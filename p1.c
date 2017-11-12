@@ -75,7 +75,9 @@ int main()
     union u {  
             unsigned long val;  
             char c[long_size];  
-    }data;
+    }data,data2;
+    char bak;
+
     child = fork();  
     if(child == 0) {  
         ptrace(PTRACE_TRACEME, 0, NULL, NULL);  
@@ -87,23 +89,26 @@ int main()
                           child, 8 * RIP,   
                           NULL);  
         printf("The RIP is %lx\n", data.val); 
-        getchar(); 
+        //getchar(); 
 
         data.val = ptrace(PTRACE_PEEKTEXT,   
                           child, (void *)0x400579,   
                           NULL);  
         printf("before The instr is %lx\n", data.val);  
+        bak = data.c[0];
         data.c[0] = 0xcc;
         ptrace(PTRACE_POKETEXT, 
                 child, (void *)0x400579, data.val);
         printf("after The instr is %lx\n", data.val);
         ptrace(PTRACE_CONT, child, NULL, NULL);  
-        getchar();
         wait(NULL);
-        data.val = ptrace(PTRACE_PEEKUSER,   
+        data2.val = ptrace(PTRACE_PEEKUSER,   
                           child, 8 * RIP,   
                           NULL);  
-        printf("The RIP is %lx\n", data.val);  
+        printf("The RIP is %lx\n", data2.val);  
+        data.c[0] = bak;
+        ptrace(PTRACE_POKEDATA, child, (void *)0x400579, data.val); 
+        ptrace(PTRACE_POKEUSER, child, 8 * RIP, data2.val-1);
         ptrace(PTRACE_CONT, child, NULL, NULL);  
     }  
     return 0;  
