@@ -72,7 +72,7 @@ int main()
 {  
     pid_t child;  
     //union u data;
-    union u {  
+    union u {   
             unsigned long val;  
             char c[long_size];  
     }data,data2;
