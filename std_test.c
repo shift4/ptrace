@@ -24,7 +24,9 @@ int main()
     }
     i = 0;
     while(calls[i].addr != 0){
-        printf("%ld%s\n",calls[i].addr,calls[i].tfuncname);
+        if(strstr(calls[i].tfuncname,"*%rax")!=NULL){
+            printf("%ld%s\n",calls[i].addr,calls[i].tfuncname);
+        }
         i++;
     }
     fclose(fp);

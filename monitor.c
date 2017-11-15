@@ -72,8 +72,13 @@ int main(int argc, char *argv[])
         if (c.taddr != 0){
             printf("%s calls %s at %ld\n", c.funcname, c.tfuncname, c.taddr);
         }else{
-            
-            data2.val = ptrace(PTRACE_PEEKUSER, child, 8 * RAX, NULL);
+            if(strstr(c.tfuncname,"*%rax")!=NULL){
+                data2.val = ptrace(PTRACE_PEEKUSER, child, 8 * RAX, NULL);
+            }else if(strstr(c.tfuncname,"*%rcx")!=NULL){
+                data2.val = ptrace(PTRACE_PEEKUSER, child, 8 * RCX, NULL);
+            }else if(strstr(c.tfuncname,"*%r9")!=NULL){
+                data2.val = ptrace(PTRACE_PEEKUSER, child, 8 * R9, NULL);
+            }
             printf("%s calls %s at %ld\n", c.funcname, c.tfuncname, data2.val);
         }
         data.val = ptrace(PTRACE_PEEKTEXT, child, (void *)c.addr, NULL);
