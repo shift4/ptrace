@@ -72,6 +72,7 @@ int main(int argc, char *argv[])
         if (c.taddr != 0){
             printf("%s calls %s at %ld\n", c.funcname, c.tfuncname, c.taddr);
         }else{
+            memset(&data2, 1, sizeof(union bp));
             if(strstr(c.tfuncname,"*%rax")!=NULL){
                 data2.val = ptrace(PTRACE_PEEKUSER, child, 8 * RAX, NULL);
             }else if(strstr(c.tfuncname,"*%rcx")!=NULL){
