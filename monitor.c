@@ -21,9 +21,25 @@ struct call
     unsigned char bak;
 };
 
+struct func
+{
+    unsigned long addr;
+    char funcname[50];
+};
+
 struct call calls[10000];
 
+struct func funcs[10000];
+
 struct call getcall(unsigned long addr)
+{
+    int i = 0;
+    while (calls[i].addr != addr)
+        i++;
+    return calls[i];
+}
+
+struct call getfunc(unsigned long addr)
 {
     int i = 0;
     while (calls[i].addr != addr)
