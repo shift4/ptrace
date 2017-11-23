@@ -29,7 +29,7 @@ struct func
 
 struct call calls[10000];
 
-struct func funcs[10000];
+struct func funcs[2000];
 
 struct call getcall(unsigned long addr)
 {
@@ -39,12 +39,12 @@ struct call getcall(unsigned long addr)
     return calls[i];
 }
 
-struct call getfunc(unsigned long addr)
+struct func getfunc(unsigned long addr)
 {
     int i = 0;
-    while (calls[i].addr != addr)
+    while (funcs[i].addr != addr)
         i++;
-    return calls[i];
+    return funcs[i];
 }
 
 int main(int argc, char *argv[])
@@ -55,6 +55,7 @@ int main(int argc, char *argv[])
     FILE *fp;
     int i = 0;
     struct call c;
+    struct func f;
 
     memset(calls, 10000, sizeof(struct call));
     fp = fopen("calls", "r");
@@ -62,6 +63,15 @@ int main(int argc, char *argv[])
     {
         fscanf(fp, "%lx%s%lx%s", &calls[i].addr, calls[i].funcname,
                &calls[i].taddr, calls[i].tfuncname);
+        i++;
+    }
+    fclose(fp);
+    i = 0;
+    memset(funcs, 2000, sizeof(struct func));
+    fp = fopen("funcs", "r");
+    while (!feof(fp))
+    {
+        fscanf(fp, "%lx%s", &funcs[i].addr, funcs[i].funcname);
         i++;
     }
     fclose(fp);
@@ -86,7 +96,7 @@ int main(int argc, char *argv[])
         //printf("The RIP is %lx\n", data.val);
         c = getcall(data.val - 1);
         if (c.taddr != 0){
-            printf("%s calls %s at %ld\n", c.funcname, c.tfuncname, c.taddr);
+            printf("%s > %s\n", c.funcname, c.tfuncname);
         }else{
             memset(&data2, 1, sizeof(union bp));
             if(strstr(c.tfuncname,"*%rax")!=NULL){
@@ -96,7 +106,8 @@ int main(int argc, char *argv[])
             }else if(strstr(c.tfuncname,"*%r9")!=NULL){
                 data2.val = ptrace(PTRACE_PEEKUSER, child, 8 * R9, NULL);
             }
-            printf("%s calls %s at %ld\n", c.funcname, c.tfuncname, data2.val);
+            f = getfunc(data2.val);
+            printf("%s > %s\n", c.funcname, f.funcname);
         }
         data.val = ptrace(PTRACE_PEEKTEXT, child, (void *)c.addr, NULL);
         data.c[0] = c.bak;
