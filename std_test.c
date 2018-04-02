@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include<string.h>
+#include<unistd.h>
 
 struct call{
     unsigned long addr;
@@ -10,11 +11,21 @@ struct call{
 
 struct call calls[10000];
 
+void __sanitizer_cov_trace_pc_guard(int *g)
+{
+	void *PC = __builtin_return_address(0);
+    char PcDesc[1024];
+    __sanitizer_symbolize_pc(PC,"%p %F %L",PcDesc,sizeof(PcDesc));
+    printf("guard:%p %x PC %s\n",g,*g,PcDesc);
+}
+
 int main()
 {
     int i = 0;
     FILE *fp;
 
+    //printf("%ld\n",sysconf(_SC_OPEN_MAX));
+    
     memset(calls,10000,sizeof(struct call));
     fp = fopen("calls","r");
     while(!feof(fp)){
@@ -30,5 +41,6 @@ int main()
         i++;
     }
     fclose(fp);
+    
     return 0;
 }
