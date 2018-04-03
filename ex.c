@@ -1,10 +1,15 @@
-#include<stdio.h>
+#include<stdlib.h>
+#include<unistd.h>
 
-char arr[] = "hello,world!\n";
+void bad_foo()
+{
+	int *a  = (int *) malloc(40);
+	a[10] = 1;
+}
 
 int main()
 {
-	arr[3] = 'a';
-	printf("%s %lu\n",arr,sizeof("aaaaaaaaaaaaaaaaaaaa"));
+	bad_foo();
+	sleep(10);
 	return 0;
 }

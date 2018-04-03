@@ -23,8 +23,6 @@ int main()
 {
     int i = 0;
     FILE *fp;
-
-    //printf("%ld\n",sysconf(_SC_OPEN_MAX));
     
     memset(calls,10000,sizeof(struct call));
     fp = fopen("calls","r");
