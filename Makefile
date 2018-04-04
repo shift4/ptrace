@@ -1,15 +1,19 @@
-CC = clang
-CFLAGS = -g -fsanitize-coverage=trace-pc-guard
-LDFLAGS = -fsanitize=address 
+CC := clang
+CFLAGS := -g
 
-all: std_test
+define banner
+	@printf "#\n# Starting $1...\n#\n"
+endef
 
-std_test: std_test.o
+all:std_test
 
-banner:
-	@printf "#\n# Starting build...\n#\n"
+std_test:LDFLAGS += -fsanitize=address
+std_test:std_test.o
+
+std_test.o:CFLAGS += -fsanitize-coverage=trace-pc-guard
 
 clean:
-	rm std_test
+	$(call banner,$@)
+	rm std_test std_test.o
 
-.PHONY:clean all banner
+.PHONY:clean all
