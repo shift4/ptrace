@@ -1,10 +1,14 @@
 #include<stdio.h>
+#include<string.h>
 
-char arr[] = "hello,world!\n";
+
+char call[20] = {'a','c','b'};
 
 int main()
 {
-	arr[3] = 'a';
-	printf("%s %lu\n",arr,sizeof("aaaaaaaaaaaaaaaaaaaa"));
+	memset(call, 0, sizeof(char));
+	if(strlen(call) == 0){
+		printf("hah\n");
+	}
 	return 0;
 }
