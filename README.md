@@ -1,3 +1,3 @@
-this's my personal ptrace exprimental repo.
+this's my repo.
 
 yes, im coming back.
